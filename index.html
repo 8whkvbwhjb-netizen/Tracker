@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lantern Keep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:ital,wght@0,600;0,800;1,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a console on a walnut shelf. TV on the left, the handset to its right, the instruction booklet below. */
+:root {
+  color-scheme: dark;
+  --bg: #120e0a;
+  --walnut: #2b1d12;
+  --walnut-hi: #3d2a1a;
+  --gold: #d4ab5c;
+  --gold-lo: #8c6a30;
+  --ink: #f1e8d4;
+  --muted: #b5a68a;
+  --body: #0d0b09;
+  --screen: #000000;
+  --overlay: #16233d;
+  --overlay-key: #1f3154;
+  --overlay-line: #2f4670;
+  --overlay-ink: #f4ead2;
+  --overlay-muted: #8ea2c8;
+  --overlay-hi: #ffa600;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+html, body { background: var(--bg); color: var(--ink); }
+body { font-family: var(--font-body); font-size: 16px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 28px; }
+
+.label { display: grid; gap: 6px; }
+.eyebrow { margin: 0; font: 600 .82rem/1 var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font: italic 800 clamp(2.6rem, 7vw, 4.4rem)/.95 var(--font-display); letter-spacing: .02em; text-transform: uppercase; color: var(--gold); text-wrap: balance; }
+.stripes { height: 9px; max-width: 420px; background: linear-gradient(var(--gold) 0 3px, transparent 3px 6px, var(--gold-lo) 6px 9px); }
+.lede { margin: 4px 0 0; max-width: 62ch; color: var(--ink); }
+
+.console { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; align-items: start; }
+.tv { background: repeating-linear-gradient(97deg, var(--walnut) 0 6px, var(--walnut-hi) 6px 9px, var(--walnut) 9px 17px); border-radius: 14px; padding: 14px; box-shadow: inset 0 0 0 2px var(--gold-lo); }
+.bezel { position: relative; background: var(--screen); border-radius: 22px / 18px; padding: 14px; }
+#screen { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; image-rendering: pixelated; image-rendering: crisp-edges; background: var(--screen); border-radius: 10px; }
+.scan { position: absolute; inset: 14px; border-radius: 10px; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, color-mix(in srgb, var(--screen) 22%, transparent) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 40px color-mix(in srgb, var(--screen) 70%, transparent); }
+.hint { margin: 10px 2px 0; font: 500 .78rem/1.4 var(--font-mono); color: var(--muted); }
+
+.pad { position: relative; background: var(--body); border: 2px solid var(--gold-lo); border-radius: 22px; padding: 18px 36px; display: grid; gap: 18px; justify-items: center; }
+.side { position: absolute; top: 24%; width: 22px; height: 96px; border: 0; border-radius: 6px; padding: 0; cursor: pointer; touch-action: none;
+  background: linear-gradient(90deg, var(--gold-lo), var(--gold) 60%, var(--gold-lo)); color: var(--body);
+  font: 800 .62rem/1 var(--font-display); letter-spacing: .2em; writing-mode: vertical-rl; }
+.side-l { left: 6px; } .side-r { right: 6px; }
+.side.on { background: var(--overlay-hi); }
+
+.overlay { background: var(--overlay); border-radius: 10px; padding: 10px; width: 100%; box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--overlay-line); }
+.ov-title { margin: 0 0 8px; text-align: center; font: italic 800 .95rem/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--overlay-hi); }
+.keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.key { position: relative; aspect-ratio: 1.3; display: grid; place-items: center; padding: 10px 2px 2px; border-radius: 7px; border: 1px solid var(--overlay-line); background: var(--overlay-key); color: var(--overlay-ink); font: 600 .74rem/1 var(--font-display); letter-spacing: .07em; text-transform: uppercase; cursor: pointer; touch-action: manipulation; }
+.key small { position: absolute; top: 4px; left: 6px; font: 500 .58rem/1 var(--font-mono); letter-spacing: 0; color: var(--overlay-muted); }
+.key.on { background: var(--overlay-hi); color: var(--body); }
+.key.on small { color: var(--body); }
+.key:focus-visible, .side:focus-visible, .disc:focus-visible { outline: 2px solid var(--overlay-hi); outline-offset: 2px; }
+
+.disc { position: relative; width: min(160px, 100%); aspect-ratio: 1; border-radius: 50%; cursor: pointer; touch-action: none; box-sizing: border-box; border: 3px solid var(--gold-lo);
+  background: radial-gradient(circle, var(--gold) 0 54%, var(--gold-lo) 55% 57%, transparent 58%),
+              repeating-conic-gradient(from -1deg, var(--gold) 0 2deg, var(--walnut) 2deg 22.5deg); }
+.disc-dot { position: absolute; left: 50%; top: 50%; width: 22%; aspect-ratio: 1; margin: -11% 0 0 -11%; border-radius: 50%; background: var(--body); box-shadow: inset 0 0 0 2px var(--gold-lo); transition: transform 60ms linear; }
+.disc-cap { margin: -8px 0 0; font: 600 .7rem/1 var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+
+.manual { display: grid; gap: 18px; }
+.manual h2 { margin: 0; font: italic 800 1.8rem/1 var(--font-display); text-transform: uppercase; letter-spacing: .03em; color: var(--gold); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px 36px; }
+.cols article { min-width: 0; }
+.cols h3 { margin: 0 0 8px; font: 800 .95rem/1.2 var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.cols p, .cols li { color: var(--ink); }
+.cols p { margin: 0 0 10px; max-width: 62ch; }
+.cols ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+kbd { font: 500 .78rem/1 var(--font-mono); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--gold-lo); color: var(--ink); white-space: nowrap; }
+.map { display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; margin: 0; }
+.map dt { font: 600 .9rem/1.5 var(--font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.map dd { margin: 0; }
+.beasts { list-style: none; padding: 0 !important; gap: 12px !important; }
+.beasts li { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
+.beasts canvas { width: 40px; height: 40px; image-rendering: pixelated; background: var(--screen); border-radius: 4px; }
+.beasts b { font: 800 .95rem/1 var(--font-display); letter-spacing: .06em; text-transform: uppercase; }
+.beasts span { display: block; color: var(--muted); font-size: .9rem; line-height: 1.4; }
+.pts { font: 500 .8rem/1 var(--font-mono); color: var(--gold); font-variant-numeric: tabular-nums; }
+.score { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.score td { padding: 5px 0; border-bottom: 1px solid var(--walnut-hi); }
+.score td:last-child { text-align: right; font-family: var(--font-mono); font-size: .85rem; color: var(--gold); }
+
+@media (max-width: 820px) {
+  .console { grid-template-columns: minmax(0, 1fr); }
+  .pad { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 14px 36px; }
+  .disc { width: 128px; }
+  .disc-cap { display: none; }
+}
+@media (max-width: 420px) {
+  .disc { width: 104px; }
+  .tv { padding: 8px; } .bezel { padding: 8px; } .scan { inset: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .disc-dot { transition: none; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="label">
+    <p class="eyebrow">Homebrew cartridge · 1 player · keypad overlay included</p>
+    <h1>Lantern Keep</h1>
+    <div class="stripes" aria-hidden="true"></div>
+    <p class="lede">Light the four lanterns in each room of the keep, take the stair down, and get out before the Keeper wakes. Built to the rules of a 1980 home console: 160 × 96 pixels, 16 colours, eight moving objects and a keypad overlay.</p>
+  </header>
+
+  <section class="console" aria-label="Game console">
+    <div>
+      <div class="tv">
+        <div class="bezel">
+          <canvas id="screen" width="160" height="96" aria-label="Game screen"></canvas>
+          <div class="scan" aria-hidden="true"></div>
+        </div>
+      </div>
+      <p class="hint">Keyboard: arrows or WASD move · Space fires · 1 flare · 3 bell · P pause · M sound · Enter start</p>
+    </div>
+
+    <div class="pad" aria-label="Controller">
+      <button class="side side-l" id="fire-l" type="button" data-fire aria-label="Fire">FIRE</button>
+      <div class="overlay">
+        <p class="ov-title">Lantern Keep</p>
+        <div class="keys">
+          <button class="key" id="k1" type="button" data-key="1"><small>1</small>Flare</button>
+          <button class="key" id="k2" type="button" data-key="2" aria-label="Key 2, unused"><small>2</small></button>
+          <button class="key" id="k3" type="button" data-key="3"><small>3</small>Bell</button>
+          <button class="key" id="k4" type="button" data-key="4" aria-label="Key 4, unused"><small>4</small></button>
+          <button class="key" id="k5" type="button" data-key="5"><small>5</small>Pause</button>
+          <button class="key" id="k6" type="button" data-key="6" aria-label="Key 6, unused"><small>6</small></button>
+          <button class="key" id="k7" type="button" data-key="7"><small>7</small>Sound</button>
+          <button class="key" id="k8" type="button" data-key="8" aria-label="Key 8, unused"><small>8</small></button>
+          <button class="key" id="k9" type="button" data-key="9" aria-label="Key 9, unused"><small>9</small></button>
+          <button class="key" id="kc" type="button" data-key="C"><small>CLR</small>Quit</button>
+          <button class="key" id="k0" type="button" data-key="0" aria-label="Key 0, unused"><small>0</small></button>
+          <button class="key" id="ke" type="button" data-key="E"><small>ENT</small>Start</button>
+        </div>
+      </div>
+      <div class="disc" id="disc" role="application" aria-label="Direction disc"><div class="disc-dot" id="disc-dot"></div></div>
+      <p class="disc-cap" aria-hidden="true">Disc</p>
+      <button class="side side-r" id="fire-r" type="button" data-fire aria-label="Fire">FIRE</button>
+    </div>
+  </section>
+
+  <section class="manual" aria-labelledby="manual-h">
+    <h2 id="manual-h">From the instruction booklet</h2>
+    <div class="cols">
+      <article>
+        <h3>Object</h3>
+        <p>Each room of the keep holds four cold lanterns. Walk into a lantern to light it. When all four burn, a stair appears deep in the room. Step onto it to go down to the next room.</p>
+        <p>The bar in the top right corner is the Keeper's sleep. When it runs out, the Keeper steps out of the wall and hunts you. Arrows only stun it, so light the lanterns quickly.</p>
+        <p>The heartbeat you hear speeds up as the bar drains.</p>
+      </article>
+      <article>
+        <h3>Controller</h3>
+        <dl class="map">
+          <dt>Disc</dt><dd>Walk the corridors. <kbd>←↑→↓</kbd> or <kbd>WASD</kbd></dd>
+          <dt>Side buttons</dt><dd>Loose an arrow the way you face. <kbd>Space</kbd> <kbd>Z</kbd> <kbd>X</kbd></dd>
+          <dt>1 Flare</dt><dd>Freezes every creature for four seconds. Frozen creatures are harmless. You start with 3 and earn one per room, up to 5.</dd>
+          <dt>3 Bell</dt><dd>Drops a ringing bell. Spiders and the Keeper go to it instead of you. One per room.</dd>
+          <dt>5 Pause</dt><dd><kbd>P</kbd> or <kbd>Esc</kbd>. While paused, CLR quits to the title.</dd>
+          <dt>7 Sound</dt><dd><kbd>M</kbd></dd>
+          <dt>Enter</dt><dd>Start a game.</dd>
+        </dl>
+      </article>
+      <article>
+        <h3>Creatures of the keep</h3>
+        <ul class="beasts">
+          <li><canvas width="8" height="8" data-s="bat1" data-c="purple"></canvas><div><b>Bat</b><span>Flutters at random through the halls.</span></div><span class="pts">50</span></li>
+          <li><canvas width="8" height="8" data-s="spider1" data-c="red"></canvas><div><b>Spider</b><span>Follows your trail, corner by corner.</span></div><span class="pts">100</span></li>
+          <li><canvas width="8" height="8" data-s="wraith1" data-c="violet"></canvas><div><b>Wraith</b><span>Drifts straight through walls. Takes two arrows. From room 3.</span></div><span class="pts">200</span></li>
+          <li><canvas width="8" height="8" data-s="keeper1" data-c="orange"></canvas><div><b>The Keeper</b><span>Cannot be killed. An arrow stuns it for two seconds.</span></div><span class="pts">—</span></li>
+        </ul>
+      </article>
+      <article>
+        <h3>Scoring</h3>
+        <table class="score">
+          <tr><td>Light a lantern</td><td>100</td></tr>
+          <tr><td>Bat · Spider · Wraith</td><td>50 · 100 · 200</td></tr>
+          <tr><td>Room bonus</td><td>100 × room</td></tr>
+          <tr><td>Keeper still asleep</td><td>10 per second left</td></tr>
+          <tr><td>Extra life</td><td>every 5,000</td></tr>
+        </table>
+      </article>
+      <article>
+        <h3>Built inside the console's limits</h3>
+        <ul>
+          <li>160 × 96 pixels on a 20 × 12 grid of 8 × 8 background cards. Walls, lanterns, stairs and pickups are all cards.</li>
+          <li>The fixed 16-colour palette and nothing else.</li>
+          <li>Eight moving objects at most: you, your arrow, the Keeper and five creatures. That cap is why only one arrow flies at a time.</li>
+          <li>Every moving object is a single colour. The wraith flickers on alternate frames, the old trick for ghosts.</li>
+          <li>Three square-wave voices plus a noise channel, like the console's sound chip.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- Hardware-ish constants ----------
+const W = 160, H = 96;           // screen in pixels
+const MW = 19, MH = 11;          // playfield in 8x8 cards
+const OX = 4, OY = 8;            // playfield origin (HUD row on top)
+const STEP = 1000 / 60;
+const MAX_CREATURES = 5;         // 8 MOBs: player + arrow + keeper + 5
+const PSPEED = 0.9;
+
+const PAL = {
+  black: '#0c0005', blue: '#002dff', red: '#ff3e00', tan: '#c9d464',
+  dkgreen: '#00780f', green: '#00a720', yellow: '#faea27', white: '#fffcff',
+  gray: '#a7a8a8', cyan: '#5acbff', orange: '#ffa600', brown: '#3c5800',
+  pink: '#ff3276', violet: '#bd95ff', ygreen: '#6ccd30', purple: '#c81a7d'
+};
+const THEMES = [
+  { bg: PAL.dkgreen, fg: PAL.green },
+  { bg: PAL.blue, fg: PAL.violet },
+  { bg: PAL.brown, fg: PAL.tan },
+  { bg: PAL.purple, fg: PAL.pink },
+  { bg: PAL.red, fg: PAL.orange }
+];
+
+// 3x5 font, rows top to bottom
+const FONT = {
+  '0':'111101101101111','1':'010110010010111','2':'111001111100111','3':'111001011001111','4':'101101111001001',
+  '5':'111100111001111','6':'111100111101111','7':'111001010010010','8':'111101111101111','9':'111101111001111',
+  A:'010101111101101',B:'110101110101110',C:'011100100100011',D:'110101101101110',E:'111100110100111',
+  F:'111100110100100',G:'011100101101011',H:'101101111101101',I:'111010010010111',J:'001001001101010',
+  K:'101101110101101',L:'100100100100111',M:'101111111101101',N:'110101101101101',O:'010101101101010',
+  P:'110101110100100',Q:'010101101110011',R:'110101110101101',S:'011100010001110',T:'111010010010010',
+  U:'101101101101111',V:'101101101101010',W:'101101111111101',X:'101101010101101',Y:'101101010010010',
+  Z:'111001010100111','.':'000000000000010',':':'000010000010000','-':'000000111000000','!':'010010010000010',
+  '/':'001001010100100','@':'010111010010101',' ':'000000000000000'
+};
+
+const SPR = {
+  hero1:  ['...XX...','..XXXX..','...XX...','.XXXXXX.','X.XXXX.X','..XXXX..','..X..X..','.X....X.'],
+  hero2:  ['...XX...','..XXXX..','...XX...','.XXXXXX.','X.XXXX.X','..XXXX..','..X..X..','..X..X..'],
+  bat1:   ['........','X......X','XX.XX.XX','XXXXXXXX','.XXXXXX.','..X..X..','........','........'],
+  bat2:   ['........','........','...XX...','.XXXXXX.','XXXXXXXX','X.X..X.X','X......X','........'],
+  spider1:['X......X','.X.XX.X.','..XXXX..','XXXXXXXX','..XXXX..','.X.XX.X.','X......X','........'],
+  spider2:['........','X..XX..X','.XXXXXX.','..XXXX..','XXXXXXXX','.X.XX.X.','.X....X.','........'],
+  wraith1:['..XXXX..','.XXXXXX.','XX.XX.XX','XXXXXXXX','XXXXXXXX','XXXXXXXX','XXXXXXXX','X.X..X.X'],
+  wraith2:['..XXXX..','.XXXXXX.','XX.XX.XX','XXXXXXXX','XXXXXXXX','XXXXXXXX','XXXXXXXX','.X.XX.X.'],
+  keeper1:['.XXXXXX.','XX.XX.XX','.XXXXXX.','...XX...','XXXXXXXX','X.XXXX.X','..X..X..','.XX..XX.'],
+  keeper2:['.XXXXXX.','XX.XX.XX','.XXXXXX.','...XX...','XXXXXXXX','X.XXXX.X','..X..X..','XX....XX'],
+  brick:  ['XXXXXXX.','XXXXXXX.','XXXXXXX.','........','XXX.XXXX','XXX.XXXX','XXX.XXXX','........'],
+  bowl:   ['........','........','........','........','XXXXXXXX','.XXXXXX.','..XXXX..','.XXXXXX.'],
+  flame1: ['...X....','..XX.X..','..XXXX..','.XXXXX..','........','........','........','........'],
+  flame2: ['....X...','.X.XX...','..XXXX..','..XXXXX.','........','........','........','........'],
+  ember:  ['........','........','........','...XX...','........','........','........','........'],
+  stairs: ['XXXXXXXX','X.......','X.XXXXXX','X.X.....','X.X.XXXX','X.X.X...','X.X.X.XX','X.X.X.X.'],
+  quiver: ['.....X.X','......XX','.....XXX','....X...','...X....','..X.....','XX......','XX......'],
+  bell:   ['...XX...','..XXXX..','..XXXX..','.XXXXXX.','.XXXXXX.','XXXXXXXX','...XX...','........']
+};
+const STATS = {
+  bat:    { pts: 50,  hp: 1, col: PAL.purple },
+  spider: { pts: 100, hp: 1, col: PAL.red },
+  wraith: { pts: 200, hp: 2, col: PAL.violet }
+};
+const DV = [[0,-1],[1,0],[0,1],[-1,0]]; // up right down left
+
+// ---------- Drawing ----------
+const canvas = document.getElementById('screen');
+const g = canvas.getContext('2d');
+g.imageSmoothingEnabled = false;
+
+const sprCache = new Map();
+function sprCanvas(name, color) {
+  const k = name + color;
+  let c = sprCache.get(k);
+  if (c) return c;
+  c = document.createElement('canvas'); c.width = c.height = 8;
+  const x = c.getContext('2d'); x.fillStyle = color;
+  SPR[name].forEach((row, y) => { for (let i = 0; i < 8; i++) if (row[i] === 'X') x.fillRect(i, y, 1, 1); });
+  sprCache.set(k, c);
+  return c;
+}
+function drawSpr(name, color, x, y) { g.drawImage(sprCanvas(name, color), Math.round(x), Math.round(y)); }
+
+const wallCache = {};
+function wallTile(i) {
+  if (wallCache[i]) return wallCache[i];
+  const c = document.createElement('canvas'); c.width = c.height = 8;
+  const x = c.getContext('2d');
+  x.fillStyle = THEMES[i].bg; x.fillRect(0, 0, 8, 8);
+  x.drawImage(sprCanvas('brick', THEMES[i].fg), 0, 0);
+  return (wallCache[i] = c);
+}
+
+function text(s, x, y, color, sc = 1) {
+  g.fillStyle = color;
+  for (const ch of String(s).toUpperCase()) {
+    const f = FONT[ch];
+    if (f) for (let i = 0; i < 15; i++) if (f[i] === '1') g.fillRect(x + (i % 3) * sc, y + ((i / 3) | 0) * sc, sc, sc);
+    x += 4 * sc;
+  }
+}
+const tw = (s, sc = 1) => String(s).length * 4 * sc - sc;
+const ctext = (s, y, c, sc = 1) => text(s, (W - tw(s, sc)) >> 1, y, c, sc);
+const pad6 = n => String(n).padStart(6, '0');
+
+// ---------- Sound: 3 square voices + noise ----------
+const Snd = {
+  ctx: null, master: null, nb: null, on: true,
+  init() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.master = this.ctx.createGain(); this.master.gain.value = 0.16;
+      this.master.connect(this.ctx.destination);
+      const len = this.ctx.sampleRate;
+      this.nb = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const d = this.nb.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    } catch (e) { this.ctx = null; }
+  },
+  tone(f, dur, { type = 'square', vol = 0.5, to = null, delay = 0 } = {}) {
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime + delay;
+    const o = this.ctx.createOscillator(), gn = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    gn.gain.setValueAtTime(vol, t); gn.gain.setValueAtTime(vol, t + dur * 0.7);
+    gn.gain.linearRampToValueAtTime(0, t + dur);
+    o.connect(gn).connect(this.master); o.start(t); o.stop(t + dur + 0.02);
+  },
+  noise(dur, { freq = 2000, vol = 0.5, delay = 0 } = {}) {
+    if (!this.ctx || !this.on) return;
+    const t = this.ctx.currentTime + delay;
+    const s = this.ctx.createBufferSource(); s.buffer = this.nb;
+    const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq;
+    const gn = this.ctx.createGain();
+    gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    s.connect(f).connect(gn).connect(this.master); s.start(t); s.stop(t + dur + 0.02);
+  }
+};
+const arp = (notes, gap, dur, opt = {}) => notes.forEach((f, i) => Snd.tone(f, dur, { ...opt, delay: (opt.delay || 0) + i * gap }));
+const sfx = {
+  shoot()   { Snd.tone(1200, .09, { to: 300, vol: .35 }); },
+  dry()     { Snd.tone(90, .06, { vol: .4 }); },
+  tink()    { Snd.tone(2200, .03, { vol: .15 }); },
+  hit()     { Snd.tone(400, .06, { to: 200, vol: .4 }); },
+  kill()    { Snd.noise(.18, { freq: 2500, vol: .6 }); Snd.tone(320, .12, { to: 70, vol: .35 }); },
+  stun()    { Snd.tone(180, .15, { to: 90, vol: .5, type: 'sawtooth' }); },
+  lantern() { arp([523, 659, 784, 1047], .06, .07, { vol: .3 }); },
+  open()    { arp([392, 523, 659, 784, 1047, 1319], .08, .1, { vol: .3, type: 'triangle', delay: .3 }); },
+  quiver()  { arp([660, 990], .05, .06, { vol: .3 }); },
+  flare()   { Snd.noise(.45, { freq: 6000, vol: .5 }); Snd.tone(2400, .45, { to: 150, type: 'triangle', vol: .4 }); },
+  bell()    { Snd.tone(1568, .25, { type: 'triangle', vol: .25 }); Snd.tone(2093, .2, { type: 'triangle', vol: .12, delay: .02 }); },
+  heart()   { Snd.tone(70, .07, { type: 'triangle', vol: .9 }); Snd.tone(55, .08, { type: 'triangle', vol: .8, delay: .13 }); },
+  siren(hi) { Snd.tone(hi ? 740 : 520, .14, { vol: .22 }); },
+  keeper()  { arp([740, 520, 740, 520, 740, 520], .15, .14, { vol: .3 }); },
+  death()   { Snd.tone(900, 1.1, { to: 50, vol: .4 }); Snd.noise(.6, { freq: 900, vol: .5, delay: .2 }); },
+  clear()   { arp([523, 659, 784, 659, 784, 1047], .11, .12, { vol: .3 }); },
+  tick()    { Snd.tone(1800, .02, { vol: .12 }); },
+  life()    { arp([784, 988, 1175, 1568], .07, .08, { vol: .3 }); },
+  start()   { arp([262, 330, 392, 523, 392, 523, 659], .12, .12, { vol: .3 }); },
+  over()    { arp([392, 330, 262, 196], .25, .25, { vol: .3, type: 'triangle' }); }
+};
+
+// ---------- Storage (optional) ----------
+function load(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+Snd.on = load('lk-sound', true);
+
+// ---------- Input ----------
+const KDIR = { ArrowUp: 0, KeyW: 0, ArrowRight: 1, KeyD: 1, ArrowDown: 2, KeyS: 2, ArrowLeft: 3, KeyA: 3 };
+const FIRE_CODES = new Set(['Space', 'KeyZ', 'KeyX', 'KeyJ', 'KeyK']);
+let dirCodes = [];
+const keyFire = new Set();
+let touchDir = null, touchFire = 0;
+
+function inputDir() {
+  if (touchDir != null) return touchDir;
+  return dirCodes.length ? KDIR[dirCodes[dirCodes.length - 1]] : null;
+}
+function pressKey(k) {
+  G.queue.push(k);
+  const b = document.querySelector(`[data-key="${k}"]`);
+  if (b) { b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 140); }
+}
+function pressFire() { G.fireEdge = true; }
+
+window.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  Snd.init();
+  const c = e.code;
+  let handled = true;
+  if (c in KDIR) { if (!e.repeat) { dirCodes = dirCodes.filter(x => x !== c); dirCodes.push(c); } }
+  else if (FIRE_CODES.has(c)) { if (!e.repeat) { keyFire.add(c); pressFire(); } }
+  else if (e.repeat) handled = /^[0-9]$/.test(e.key) || ['Enter', 'NumpadEnter', 'Backspace', 'Escape', 'KeyP', 'KeyM'].includes(c);
+  else if (/^[0-9]$/.test(e.key)) pressKey(e.key);
+  else if (c === 'Enter' || c === 'NumpadEnter') pressKey('E');
+  else if (c === 'Backspace' || c === 'Delete') pressKey('C');
+  else if (c === 'KeyP' || c === 'Escape') pressKey('5');
+  else if (c === 'KeyM') pressKey('7');
+  else handled = false;
+  if (handled) e.preventDefault();
+});
+window.addEventListener('keyup', e => {
+  dirCodes = dirCodes.filter(x => x !== e.code);
+  keyFire.delete(e.code);
+});
+window.addEventListener('blur', () => { dirCodes = []; keyFire.clear(); touchDir = null; touchFire = 0; });
+
+document.querySelectorAll('[data-key]').forEach(b => {
+  b.addEventListener('pointerdown', e => { e.preventDefault(); Snd.init(); pressKey(b.dataset.key); });
+  b.addEventListener('keydown', e => { if (e.code === 'Space') { e.stopPropagation(); e.preventDefault(); Snd.init(); pressKey(b.dataset.key); } });
+});
+document.querySelectorAll('[data-fire]').forEach(b => {
+  const up = () => { if (b.classList.contains('on')) { b.classList.remove('on'); touchFire = Math.max(0, touchFire - 1); } };
+  b.addEventListener('pointerdown', e => { e.preventDefault(); Snd.init(); b.setPointerCapture(e.pointerId); if (!b.classList.contains('on')) { b.classList.add('on'); touchFire++; } pressFire(); });
+  b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
+});
+const disc = document.getElementById('disc'), discDot = document.getElementById('disc-dot');
+function discMove(e) {
+  const r = disc.getBoundingClientRect();
+  const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  if (Math.hypot(dx, dy) < r.width * 0.12) { touchDir = null; return; }
+  touchDir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
+}
+disc.addEventListener('pointerdown', e => { e.preventDefault(); Snd.init(); disc.setPointerCapture(e.pointerId); discMove(e); });
+disc.addEventListener('pointermove', e => { if (disc.hasPointerCapture(e.pointerId)) discMove(e); });
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => disc.addEventListener(t, () => { touchDir = null; }));
+let lastDot = -2;
+function updateDot() {
+  const d = inputDir(), v = d == null ? -1 : d;
+  if (v === lastDot) return;
+  lastDot = v;
+  discDot.style.transform = d == null ? '' : `translate(${DV[d][0] * 150}%, ${DV[d][1] * 150}%)`;
+}
+
+// ---------- Maze ----------
+function wall(tx, ty) { return tx < 0 || ty < 0 || tx >= MW || ty >= MH || G.map[ty][tx] === 1; }
+function open(tx, ty, d) { return !wall(tx + DV[d][0], ty + DV[d][1]); }
+function bfs(sx, sy) {
+  const D = new Int16Array(MW * MH).fill(-1);
+  const q = [sx + sy * MW]; D[q[0]] = 0;
+  for (let i = 0; i < q.length; i++) {
+    const c = q[i], x = c % MW, y = (c / MW) | 0;
+    for (const [dx, dy] of DV) {
+      const nx = x + dx, ny = y + dy;
+      if (wall(nx, ny)) continue;
+      const n = nx + ny * MW;
+      if (D[n] < 0) { D[n] = D[c] + 1; q.push(n); }
+    }
+  }
+  return D;
+}
+const CW = 9, CH = 5;
+function genMaze() {
+  const m = Array.from({ length: MH }, () => new Array(MW).fill(1));
+  const vis = Array.from({ length: CH }, () => new Array(CW).fill(false));
+  const st = [[0, CH - 1]]; vis[CH - 1][0] = true; m[2 * (CH - 1) + 1][1] = 0;
+  const inCell = (x, y) => x >= 0 && y >= 0 && x < CW && y < CH;
+  while (st.length) {
+    const [cx, cy] = st[st.length - 1];
+    const nb = [];
+    for (const d of DV) { const nx = cx + d[0], ny = cy + d[1]; if (inCell(nx, ny) && !vis[ny][nx]) nb.push([nx, ny, d]); }
+    if (!nb.length) { st.pop(); continue; }
+    const [nx, ny, d] = nb[Math.random() * nb.length | 0];
+    vis[ny][nx] = true;
+    m[2 * cy + 1 + d[1]][2 * cx + 1 + d[0]] = 0; m[2 * ny + 1][2 * nx + 1] = 0;
+    st.push([nx, ny]);
+  }
+  // Braid most dead ends so there is always a way around a creature.
+  for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) {
+    const x = 2 * cx + 1, y = 2 * cy + 1; let openN = 0; const walls = [];
+    for (const d of DV) {
+      if (m[y + d[1]][x + d[0]] === 0) openN++;
+      else if (inCell(cx + d[0], cy + d[1])) walls.push(d);
+    }
+    if (openN === 1 && walls.length && Math.random() < 0.8) { const d = walls[Math.random() * walls.length | 0]; m[y + d[1]][x + d[0]] = 0; }
+  }
+  for (let k = 0; k < 5; k++) {
+    if (Math.random() < 0.5) m[2 * (Math.random() * CH | 0) + 1][2 * (1 + (Math.random() * (CW - 1) | 0))] = 0;
+    else m[2 * (1 + (Math.random() * (CH - 1) | 0))][2 * (Math.random() * CW | 0) + 1] = 0;
+  }
+  return m;
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ---------- Movement on the card grid ----------
+function aligned(e) { return e.x % 8 === 0 && e.y % 8 === 0; }
+function advance(e, dist, choose) {
+  let guard = 8;
+  while (dist > 1e-6 && guard--) {
+    if (aligned(e)) {
+      const d = choose(e, e.x / 8, e.y / 8);
+      e.dir = d;
+      if (d == null) return;
+    }
+    const [dx, dy] = DV[e.dir];
+    const p = dx ? e.x : e.y, s = dx || dy;
+    const mod = ((p % 8) + 8) % 8;
+    const rem = s > 0 ? (mod === 0 ? 8 : 8 - mod) : (mod === 0 ? 8 : mod);
+    if (dist >= rem) { e.x = Math.round(e.x + dx * rem); e.y = Math.round(e.y + dy * rem); dist -= rem; }
+    else { e.x += dx * dist; e.y += dy * dist; dist = 0; }
+  }
+}
+function choosePlayer(e, tx, ty) {
+  const want = inputDir();
+  if (want == null) return null;
+  if (open(tx, ty, want)) { e.face = want; return want; }
+  if (e.dir != null && open(tx, ty, e.dir)) return e.dir;
+  e.face = want;
+  return null;
+}
+function forwardDirs(e, tx, ty) {
+  const dirs = [0, 1, 2, 3].filter(d => open(tx, ty, d));
+  const fwd = dirs.filter(d => e.dir == null || d !== (e.dir + 2) % 4);
+  return fwd.length ? fwd : dirs;
+}
+function chooseBat(e, tx, ty) {
+  const c = forwardDirs(e, tx, ty);
+  if (!c.length) return null;
+  if (e.dir != null && c.includes(e.dir) && Math.random() < 0.5) return e.dir;
+  return c[Math.random() * c.length | 0];
+}
+function chaser(rand) {
+  return (e, tx, ty) => {
+    const c = forwardDirs(e, tx, ty);
+    if (!c.length) return null;
+    if (Math.random() < rand) return c[Math.random() * c.length | 0];
+    let best = c[0], bd = 1e9;
+    for (const d of c) { const v = G.pf[(tx + DV[d][0]) + (ty + DV[d][1]) * MW]; if (v >= 0 && v < bd) { bd = v; best = d; } }
+    return best;
+  };
+}
+const chooseSpider = chaser(0.25), chooseKeeper = chaser(0.05);
+function speedOf(t) {
+  const n = G.room;
+  if (t === 'bat') return Math.min(.85, .55 + .03 * n);
+  if (t === 'spider') return Math.min(.8, .42 + .035 * n);
+  if (t === 'wraith') return Math.min(.45, .22 + .02 * n);
+  return Math.min(.98, .78 + .02 * n);
+}
+
+// ---------- Game state ----------
+const G = { state: 'title', t: 0, frame: 0, queue: [], fireEdge: false, paused: false, hi: load('lk-hi', 0), msg: null };
+
+function roster(n) {
+  const left = { bat: 1 + (n >> 1), spider: 1 + ((n - 1) >> 1), wraith: n >= 3 ? (n >= 6 ? 2 : 1) : 0 };
+  const r = [];
+  while (left.bat + left.spider + left.wraith > 0) for (const t of ['bat', 'spider', 'wraith']) if (left[t]-- > 0) r.push(t);
+  return r.slice(0, MAX_CREATURES);
+}
+function mkEnemy(type, nest, wait) {
+  return { type, x: nest.x * 8, y: nest.y * 8, dir: null, hp: STATS[type].hp, wait, stun: 0, anim: Math.random() * 16 | 0 };
+}
+function spawnRoster() { G.enemies = G.roster.map((t, i) => mkEnemy(t, G.nests[i % G.nests.length], 40 + i * 50)); }
+function farNest() {
+  const p = G.player;
+  return G.nests.reduce((a, b) => (Math.abs(b.x * 8 - p.x) + Math.abs(b.y * 8 - p.y) > Math.abs(a.x * 8 - p.x) + Math.abs(a.y * 8 - p.y) ? b : a));
+}
+function placePlayer() { G.player = { x: G.start.x * 8, y: G.start.y * 8, dir: null, face: 1, anim: 0 }; G.inv = 90; }
+
+function newGame() {
+  Object.assign(G, { score: 0, lives: 3, room: 1, arrows: 9, flares: 3, nextLife: 5000, paused: false });
+  sfx.start();
+  startRoom();
+}
+function startRoom() {
+  G.theme = (G.room - 1) % THEMES.length;
+  G.map = genMaze();
+  G.start = { x: 1, y: 9 };
+  const D = bfs(1, 9);
+  const cells = [];
+  for (let cy = 0; cy < CH; cy++) for (let cx = 0; cx < CW; cx++) { const x = 2 * cx + 1, y = 2 * cy + 1; cells.push({ x, y, d: D[x + y * MW] }); }
+  cells.sort((a, b) => b.d - a.d);
+  G.stairs = cells[0];
+  const pool = shuffle(cells.filter(c => c !== G.stairs && c.d >= 4));
+  G.lanterns = [];
+  for (const sep of [7, 5, 3, 0]) for (const c of pool) {
+    if (G.lanterns.length < 4 && !G.lanterns.includes(c) && G.lanterns.every(l => Math.abs(l.x - c.x) + Math.abs(l.y - c.y) >= sep)) G.lanterns.push(c);
+  }
+  G.lanterns = G.lanterns.map(c => ({ x: c.x, y: c.y, lit: false }));
+  const taken = c => G.lanterns.some(l => l.x === c.x && l.y === c.y);
+  G.nests = cells.filter(c => c.d >= 10 && c !== G.stairs && !taken(c)).slice(0, 4);
+  if (G.nests.length < 2) G.nests = cells.slice(1, 4);
+  G.roster = roster(G.room);
+  G.keeperMax = Math.max(25, 45 - 2 * (G.room - 1)) * 60;
+  Object.assign(G, {
+    keeperT: G.keeperMax, keeper: null, arrows: Math.max(G.arrows, 5), quiver: null, qT: 0, bell: null, bellAvail: true,
+    freeze: 0, flash: 0, fx: [], pops: [], respawns: [], arrow: null, cool: 0, lit: 0, open: false, pfKey: '', beat: 60
+  });
+  placePlayer(); spawnRoster();
+  G.pf = bfs(G.start.x, G.start.y);
+  G.state = 'intro'; G.t = 0;
+}
+function toTitle() { G.state = 'title'; G.t = 0; G.paused = false; }
+
+function addScore(n, x, y) {
+  G.score += n;
+  if (x != null) G.pops.push({ x, y, s: String(n), t: 40 });
+  if (G.score >= G.nextLife) {
+    G.nextLife += 5000;
+    if (G.lives < 6) G.lives++;
+    sfx.life(); G.msg = { s: 'EXTRA LIFE', t: 90 };
+  }
+}
+function burst(x, y, c) { G.fx.push({ x, y, c, t: 16 }); }
+
+function onKey(k) {
+  if (k === '7') {
+    Snd.on = !Snd.on; save('lk-sound', Snd.on);
+    G.msg = { s: Snd.on ? 'SOUND ON' : 'SOUND OFF', t: 60 };
+    if (Snd.on) Snd.tone(880, .05, { vol: .3 });
+    return;
+  }
+  if (k === 'E') {
+    if (G.state === 'title') newGame();
+    else if (G.state === 'over' && G.t > 90) toTitle();
+    else if (G.state === 'play' && G.paused) G.paused = false;
+    return;
+  }
+  if (G.state !== 'play') return;
+  if (k === '5') { G.paused = !G.paused; Snd.tone(G.paused ? 440 : 660, .06, { vol: .3 }); return; }
+  if (G.paused) { if (k === 'C') toTitle(); return; }
+  if (k === '1') {
+    if (G.flares <= 0 || G.freeze > 0) { sfx.dry(); return; }
+    G.flares--; G.freeze = 240; G.flash = 4; sfx.flare();
+  } else if (k === '3') {
+    if (!G.bellAvail) { sfx.dry(); return; }
+    const p = G.player;
+    G.bellAvail = false; G.bell = { x: Math.round(p.x / 8), y: Math.round(p.y / 8), t: 360 }; sfx.bell();
+  }
+}
+
+function tickFx() {
+  G.fx = G.fx.filter(f => --f.t > 0);
+  G.pops = G.pops.filter(f => --f.t > 0);
+  if (G.msg && --G.msg.t <= 0) G.msg = null;
+}
+const overlap = (a, b) => Math.abs(a.x - b.x) < 6 && Math.abs(a.y - b.y) < 6;
+const hitPt = (e, a) => a.x >= e.x && a.x < e.x + 8 && a.y >= e.y && a.y < e.y + 8;
+
+function hitEnemy(e) {
+  if (--e.hp > 0) { e.stun = 20; sfx.hit(); return; }
+  G.enemies.splice(G.enemies.indexOf(e), 1);
+  addScore(STATS[e.type].pts, e.x, e.y);
+  burst(e.x, e.y, STATS[e.type].col);
+  sfx.kill();
+  G.respawns.push({ type: e.type, t: 300 });
+}
+
+function updPlay(fe) {
+  tickFx();
+  const p = G.player;
+  const want = inputDir();
+  if (want != null && p.dir != null && want === (p.dir + 2) % 4) { p.dir = want; p.face = want; }
+  const ox = p.x, oy = p.y;
+  advance(p, PSPEED, choosePlayer);
+  if (p.x !== ox || p.y !== oy) p.anim++;
+  const ptx = Math.round(p.x / 8), pty = Math.round(p.y / 8);
+  const near = (tx, ty) => Math.abs(p.x - tx * 8) < 4 && Math.abs(p.y - ty * 8) < 4;
+
+  for (const l of G.lanterns) if (!l.lit && near(l.x, l.y)) {
+    l.lit = true; G.lit++; addScore(100, l.x * 8, l.y * 8); sfx.lantern();
+    if (G.lit === G.lanterns.length) { G.open = true; sfx.open(); G.msg = { s: 'THE STAIR IS OPEN', t: 120 }; }
+  }
+  if (G.open && near(G.stairs.x, G.stairs.y)) { roomClear(); return; }
+  if (G.quiver && near(G.quiver.x, G.quiver.y)) { G.arrows = Math.min(9, G.arrows + 5); G.quiver = null; sfx.quiver(); }
+
+  // Fire
+  if (G.cool > 0) G.cool--;
+  if ((keyFire.size || touchFire || fe) && !G.arrow && G.cool === 0) {
+    if (G.arrows > 0) {
+      G.arrows--;
+      const [dx, dy] = DV[p.face];
+      G.arrow = { x: p.x + 4 + dx * 3, y: p.y + 4 + dy * 3, dir: p.face, len: 1 };
+      G.cool = 10; sfx.shoot();
+    } else if (fe) { sfx.dry(); G.cool = 10; }
+  }
+  if (G.arrow) {
+    const a = G.arrow, [dx, dy] = DV[a.dir];
+    outer: for (let s = 0; s < 3; s++) {
+      a.x += dx; a.y += dy; if (a.len < 6) a.len++;
+      if (wall(Math.floor(a.x / 8), Math.floor(a.y / 8))) { G.arrow = null; sfx.tink(); break; }
+      for (const e of G.enemies) if (e.wait === 0 && hitPt(e, a)) { hitEnemy(e); G.arrow = null; break outer; }
+      if (G.keeper && hitPt(G.keeper, a)) { G.keeper.stun = 120; sfx.stun(); G.arrow = null; break; }
+    }
+  }
+
+  const frozen = G.freeze > 0;
+  if (frozen) G.freeze--;
+  if (G.flash > 0) G.flash--;
+
+  // The Keeper's sleep
+  if (!G.keeper && !frozen && --G.keeperT <= 0) {
+    const n = farNest();
+    G.keeper = { x: n.x * 8, y: n.y * 8, dir: null, stun: 0, anim: 0 };
+    sfx.keeper(); G.msg = { s: 'THE KEEPER WAKES', t: 120 }; G.beat = 60;
+  }
+
+  // Path field toward the bell or the player
+  if (G.bell && --G.bell.t <= 0) G.bell = null;
+  if (G.bell && G.bell.t % 40 === 0) sfx.bell();
+  const tgt = G.bell || { x: ptx, y: pty };
+  const key = tgt.x + ',' + tgt.y;
+  if (key !== G.pfKey) { G.pfKey = key; G.pf = bfs(tgt.x, tgt.y); }
+
+  for (const e of G.enemies) {
+    if (e.wait > 0) { e.wait--; continue; }
+    if (frozen) continue;
+    e.anim++;
+    if (e.stun > 0) { e.stun--; continue; }
+    const sp = speedOf(e.type);
+    if (e.type === 'wraith') {
+      const dx = p.x - e.x, dy = p.y - e.y, l = Math.hypot(dx, dy) || 1;
+      e.x = Math.max(0, Math.min((MW - 1) * 8, e.x + dx / l * sp));
+      e.y = Math.max(0, Math.min((MH - 1) * 8, e.y + dy / l * sp));
+    } else advance(e, sp, e.type === 'bat' ? chooseBat : chooseSpider);
+  }
+  if (G.keeper && !frozen) {
+    const k = G.keeper; k.anim++;
+    if (k.stun > 0) k.stun--; else advance(k, speedOf('keeper'), chooseKeeper);
+  }
+
+  // Collisions
+  if (G.inv > 0) G.inv--;
+  else if (!frozen) {
+    const hit = G.enemies.some(e => e.wait === 0 && overlap(e, p)) || (G.keeper && G.keeper.stun === 0 && overlap(G.keeper, p));
+    if (hit) { die(); return; }
+  }
+
+  // Respawns keep the room under the MOB budget
+  for (const r of G.respawns) r.t--;
+  const ri = G.respawns.findIndex(r => r.t <= 0);
+  if (ri >= 0 && G.enemies.length < MAX_CREATURES) G.enemies.push(mkEnemy(G.respawns.splice(ri, 1)[0].type, farNest(), 45));
+
+  // A quiver turns up when you run low
+  if (!G.quiver && G.arrows <= 3 && ++G.qT > 180) {
+    G.qT = 0;
+    const spots = [];
+    for (let y = 1; y < MH; y += 2) for (let x = 1; x < MW; x += 2) {
+      if (Math.abs(x - ptx) + Math.abs(y - pty) >= 6 && !G.lanterns.some(l => l.x === x && l.y === y) && !(x === G.stairs.x && y === G.stairs.y)) spots.push({ x, y });
+    }
+    if (spots.length) G.quiver = spots[Math.random() * spots.length | 0];
+  }
+
+  // Heartbeat, or the siren once the Keeper is up
+  if (--G.beat <= 0) {
+    if (G.keeper) { G.siren = !G.siren; sfx.siren(G.siren); G.beat = 18; }
+    else if (!frozen) { sfx.heart(); G.beat = Math.round(24 + 56 * (G.keeperT / G.keeperMax)); }
+    else G.beat = 30;
+  }
+}
+
+function die() { G.state = 'dying'; G.t = 0; G.arrow = null; sfx.death(); }
+function updDying() {
+  tickFx(); G.t++;
+  if (G.t === 60) burst(G.player.x, G.player.y, PAL.white);
+  if (G.t < 110) return;
+  G.lives--;
+  if (G.lives <= 0) {
+    G.state = 'over'; G.t = 0;
+    G.newHi = G.score > G.hi;
+    if (G.newHi) { G.hi = G.score; save('lk-hi', G.hi); }
+    sfx.over();
+    return;
+  }
+  placePlayer();
+  Object.assign(G, { keeper: null, keeperT: G.keeperMax, bell: null, freeze: 0, respawns: [], pfKey: '', beat: 60 });
+  spawnRoster();
+  G.state = 'intro'; G.t = 40;
+}
+function roomClear() {
+  G.state = 'clear'; G.t = 0; G.tEnd = 0; G.arrow = null;
+  const secs = G.keeper ? 0 : Math.ceil(G.keeperT / 60);
+  G.tally = G.bonus = 100 * G.room + secs * 10;
+  sfx.clear();
+}
+function updClear() {
+  tickFx(); G.t++;
+  if (G.t > 50 && G.tally > 0) {
+    const n = Math.min(10, G.tally); G.tally -= n; addScore(n);
+    if (G.t % 3 === 0) sfx.tick();
+    if (G.tally === 0) G.tEnd = G.t;
+  }
+  if (G.tEnd && G.t - G.tEnd > 60) { G.room++; G.flares = Math.min(5, G.flares + 1); startRoom(); }
+}
+
+function step() {
+  G.frame++;
+  for (const k of G.queue.splice(0)) onKey(k);
+  const fe = G.fireEdge; G.fireEdge = false;
+  switch (G.state) {
+    case 'title': G.t++; if (fe) newGame(); break;
+    case 'intro': G.t++; tickFx(); if (G.t >= 100) G.state = 'play'; break;
+    case 'play': if (!G.paused) updPlay(fe); break;
+    case 'dying': updDying(); break;
+    case 'clear': updClear(); break;
+    case 'over': G.t++; if (G.t > 90 && fe) toTitle(); break;
+  }
+}
+
+// ---------- Render ----------
+function banner(lines, cols) {
+  const w = Math.max(...lines.map(s => tw(s))) + 10, h = lines.length * 8 + 6;
+  const x = (W - w) >> 1, y = OY + ((88 - h) >> 1);
+  g.fillStyle = PAL.black; g.fillRect(x, y, w, h);
+  g.fillStyle = THEMES[G.theme || 0].fg;
+  g.fillRect(x, y, w, 1); g.fillRect(x, y + h - 1, w, 1); g.fillRect(x, y, 1, h); g.fillRect(x + w - 1, y, 1, h);
+  lines.forEach((s, i) => text(s, x + ((w - tw(s)) >> 1), y + 4 + i * 8, cols[i] || PAL.white));
+}
+function drawLantern(x, y, lit) {
+  drawSpr('bowl', lit ? PAL.tan : PAL.gray, x, y);
+  if (lit) drawSpr((G.frame >> 3) & 1 ? 'flame2' : 'flame1', (G.frame >> 2) & 1 ? PAL.yellow : PAL.orange, x, y);
+  else drawSpr('ember', PAL.red, x, y);
+}
+function drawTitle() {
+  const wt = wallTile(0);
+  for (let x = 0; x < 20; x++) { g.drawImage(wt, x * 8, 0); g.drawImage(wt, x * 8, 88); }
+  for (let y = 1; y < 11; y++) { g.drawImage(wt, 0, y * 8); g.drawImage(wt, 152, y * 8); }
+  ctext('LANTERN', 14, PAL.yellow, 3);
+  ctext('KEEP', 34, PAL.orange, 3);
+  drawLantern(38, 38, true); drawLantern(114, 38, true);
+  const bx = ((G.t * 0.6) % 200) - 20;
+  drawSpr((G.t >> 2) & 1 ? 'bat2' : 'bat1', PAL.purple, bx, 49 + Math.sin(G.t / 6) * 1.5);
+  if ((G.t >> 5) & 1 || G.t < 32) ctext('PRESS ENTER OR FIRE', 60, PAL.white);
+  ctext('HI ' + pad6(G.hi), 70, PAL.tan);
+  ctext('A HOMEBREW CARTRIDGE', 79, PAL.gray);
+}
+function drawHud() {
+  text(pad6(G.score), 2, 1, PAL.white);
+  text('R' + String(G.room).padStart(2, '0'), 30, 1, PAL.yellow);
+  for (let i = 0; i < G.lives; i++) text('@', 46 + i * 5, 1, PAL.white);
+  text('A' + G.arrows, 78, 1, PAL.orange);
+  text('F' + G.flares, 89, 1, PAL.yellow);
+  if (G.bellAvail) text('B', 100, 1, PAL.cyan);
+  const blink = (G.frame >> 3) & 1;
+  text('K', 110, 1, G.keeper ? (blink ? PAL.red : PAL.white) : PAL.gray);
+  const bw = 42, r = G.keeper ? 0 : G.keeperT / G.keeperMax;
+  g.fillStyle = PAL.gray; g.fillRect(115, 1, bw + 2, 5);
+  g.fillStyle = PAL.black; g.fillRect(116, 2, bw, 3);
+  g.fillStyle = r > .5 ? PAL.green : r > .25 ? PAL.yellow : PAL.red;
+  if (G.keeper) { if (blink) { g.fillStyle = PAL.red; g.fillRect(116, 2, bw, 3); } }
+  else g.fillRect(116, 2, Math.ceil(bw * r), 3);
+}
+function render() {
+  g.fillStyle = PAL.black; g.fillRect(0, 0, W, H);
+  if (G.state === 'title') { drawTitle(); return; }
+  const th = THEMES[G.theme];
+  if (G.flash > 0) { g.fillStyle = PAL.white; g.fillRect(0, OY, W, H - OY); }
+  g.fillStyle = th.bg; g.fillRect(0, OY, OX, H - OY); g.fillRect(W - OX - 1, OY, OX + 1, H - OY);
+  const wt = wallTile(G.theme);
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) if (G.map[y][x]) g.drawImage(wt, OX + x * 8, OY + y * 8);
+
+  for (const l of G.lanterns) drawLantern(OX + l.x * 8, OY + l.y * 8, l.lit);
+  if (G.open) drawSpr('stairs', (G.frame >> 4) & 1 ? PAL.white : PAL.yellow, OX + G.stairs.x * 8, OY + G.stairs.y * 8);
+  if (G.quiver) drawSpr('quiver', PAL.orange, OX + G.quiver.x * 8, OY + G.quiver.y * 8);
+  if (G.bell) drawSpr('bell', (G.frame >> 3) & 1 ? PAL.yellow : PAL.white, OX + G.bell.x * 8, OY + G.bell.y * 8);
+
+  const frozen = G.freeze > 0;
+  for (const e of G.enemies) {
+    const name = e.type + ((e.anim >> (e.type === 'bat' ? 2 : 3)) & 1 ? '2' : '1');
+    if (e.wait > 0) { if (e.wait < 45 && (G.frame >> 2) & 1) drawSpr(name, PAL.gray, OX + e.x, OY + e.y); continue; }
+    if (e.type === 'wraith' && !frozen && G.frame & 1) continue; // flicker
+    let col = STATS[e.type].col;
+    if (frozen) col = PAL.cyan; else if (e.stun > 0 && G.frame & 2) col = PAL.white;
+    drawSpr(name, col, OX + e.x, OY + e.y);
+  }
+  if (G.keeper) {
+    const k = G.keeper;
+    const col = frozen ? PAL.cyan : k.stun > 0 ? ((G.frame & 4) ? PAL.white : PAL.orange) : PAL.orange;
+    drawSpr((k.anim >> 3) & 1 ? 'keeper2' : 'keeper1', col, OX + k.x, OY + k.y);
+  }
+
+  const p = G.player;
+  if (G.state === 'dying') {
+    if (G.t < 60) drawSpr('hero1', Object.values(PAL)[1 + ((G.t >> 2) % 15)], OX + p.x, OY + p.y);
+  } else if (!(G.inv > 0 && G.frame & 4)) {
+    drawSpr((p.anim >> 3) & 1 ? 'hero2' : 'hero1', PAL.white, OX + p.x, OY + p.y);
+    const [dx, dy] = DV[p.face];
+    g.fillStyle = PAL.tan; // the bow, held the way you face
+    if (dx) g.fillRect(OX + p.x + (dx > 0 ? 8 : -1), OY + p.y + 2, 1, 4);
+    else g.fillRect(OX + p.x + 2, OY + p.y + (dy > 0 ? 8 : -1), 4, 1);
+  }
+  if (G.arrow) {
+    const a = G.arrow, [dx, dy] = DV[a.dir];
+    g.fillStyle = PAL.white;
+    for (let i = 0; i < a.len; i++) g.fillRect(OX + a.x - dx * i, OY + a.y - dy * i, 1, 1);
+  }
+  for (const f of G.fx) {
+    const r = (16 - f.t) * 0.7;
+    g.fillStyle = f.c;
+    for (let k = 0; k < 8; k++) g.fillRect(Math.round(OX + f.x + 4 + Math.cos(k * Math.PI / 4) * r), Math.round(OY + f.y + 4 + Math.sin(k * Math.PI / 4) * r), 1, 1);
+  }
+  for (const f of G.pops) text(f.s, OX + Math.round(f.x), OY + Math.round(f.y) - ((40 - f.t) >> 2), PAL.white);
+
+  drawHud();
+  if (G.msg && G.state === 'play') {
+    const w = tw(G.msg.s) + 4, x = (W - w) >> 1;
+    g.fillStyle = PAL.black; g.fillRect(x, H - 8, w, 7);
+    text(G.msg.s, x + 2, H - 7, PAL.yellow);
+  }
+
+  const blink = (G.frame >> 4) & 1;
+  if (G.state === 'intro') banner(['ROOM ' + G.room, G.lit ? 'LIGHT ' + (4 - G.lit) + ' MORE' : 'LIGHT THE LANTERNS'], [PAL.yellow, PAL.white]);
+  else if (G.state === 'play' && G.paused) banner(['PAUSED', '5 RESUMES  CLR QUITS'], [PAL.yellow, PAL.gray]);
+  else if (G.state === 'clear') banner(['ROOM ' + G.room + ' CLEAR', 'BONUS ' + G.bonus], [PAL.yellow, PAL.white]);
+  else if (G.state === 'over') banner(['GAME OVER', 'SCORE ' + pad6(G.score), G.newHi ? 'NEW HIGH SCORE!' : 'HI ' + pad6(G.hi), G.t > 90 && blink ? 'PRESS ENTER' : ''], [PAL.red, PAL.white, G.newHi ? PAL.yellow : PAL.tan, PAL.gray]);
+}
+
+// ---------- Loop ----------
+let last = performance.now(), acc = 0;
+function frame(now) {
+  acc += Math.min(100, now - last); last = now;
+  while (acc >= STEP) { step(); acc -= STEP; }
+  render(); updateDot();
+  requestAnimationFrame(frame);
+}
+
+// Booklet illustrations use the same sprite data as the game.
+document.querySelectorAll('canvas[data-s]').forEach(c => {
+  const x = c.getContext('2d');
+  x.fillStyle = PAL.black; x.fillRect(0, 0, 8, 8);
+  x.drawImage(sprCanvas(c.dataset.s, PAL[c.dataset.c]), 0, 0);
+});
+
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
